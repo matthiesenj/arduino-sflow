@@ -64,7 +64,7 @@ void SensirionFlow::init()
   int16_t scaleFactorAddress = (baseAddress + 0x02B6);
   scaleFactorAddress <<= 4;  // address is a left aligned 12-bit value
 
-  uint8_t cmdReadRegister[] = { 0xFA, (scaleFactorAddress >> 8), scaleFactorAddress & 0x00FF };
+  uint8_t cmdReadRegister[] = { 0xFA, (uint8_t)(scaleFactorAddress >> 8), (uint8_t)(scaleFactorAddress & 0x00FF) };
   if (!I2CHelper::readFromI2C(mI2cAddress, cmdReadRegister, 3, data, DATA_LENGTH)) {
     Serial.print("Failed to read from I2C 2\n");
     return;
@@ -93,4 +93,3 @@ float SensirionFlow::readSample()
   float measurementValue = ((data[0] << 8) + data[1]);
   return (measurementValue / mScaleFactor);
 }
-
