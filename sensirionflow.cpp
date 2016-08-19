@@ -85,7 +85,7 @@ float SensirionFlow::readSample()
   uint8_t data[dataLength];
   
   command[0] = 0xF1;
-  if (!I2CHelper::readFromI2C(mI2cAddress, command, 1, data, dataLength)) {
+  if (!I2CHelper::readFromI2C(mI2cAddress, command, cmdLength, data, dataLength)) {
     Serial.print("Failed to read from I2C 4\n");
     return 0;
   }
