@@ -33,32 +33,28 @@
 bool I2CHelper::readFromI2C(uint8_t i2cAddress, const uint8_t* i2cCommand, uint8_t commandLength, uint8_t* data, uint8_t dataLength)
 {
   Wire.beginTransmission(i2cAddress);
-  for (int i = 0; i < commandLength; ++i) {
-    if (Wire.write(i2cCommand[i]) != 1) {
-      return false;
-    }
-  }  
-  if (Wire.endTransmission(false) != 0) {
-    Serial.println("NACK");
+  Wire.write(i2cCommand, commandLength);
+  if (Wire.endTransmission(0 == dataLength) != 0) {
     return false;
   }
 
-  Wire.requestFrom(i2cAddress, dataLength);
+  if (dataLength != 0) {
+    Wire.requestFrom(i2cAddress, dataLength);
 
-  // there should be no reason for this to not be ready, since we're using clock stretching mode,
-  // but just in case we'll try a few times
-  uint8_t tries = 1;
-  while (Wire.available() < dataLength) {
-    delay(1);
-    if (tries++ >= MAX_READ_TRIES) {
-      return false;
+    // there should be no reason for this to not be ready, since we're using clock stretching mode,
+    // but just in case we'll try a few times
+    uint8_t tries = 1;
+    while (Wire.available() < dataLength) {
+      delay(1);
+      if (tries++ >= MAX_READ_TRIES) {
+        return false;
+      }
     }
-  }
   
-  for (int i = 0; i < dataLength; ++i) {
-    data[i] = Wire.read();
+    for (int i = 0; i < dataLength; ++i) {
+      data[i] = Wire.read();
+    }
   }
   return true;
 }
-
 
