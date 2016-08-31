@@ -55,13 +55,13 @@ void SensirionFlow::init()
     return;
   }
   
-  int16_t baseAddress = (data[0] << 8) + data[1];
+  uint16_t baseAddress = (data[0] << 8) + data[1];
   baseAddress &= 0x70; // EEPROM base address is bits <6..4>
   baseAddress >>= 4;
   baseAddress *= 0x300;
 
   // - read scale factor
-  int16_t scaleFactorAddress = (baseAddress + 0x02B6);
+  uint16_t scaleFactorAddress = (baseAddress + 0x02B6);
   scaleFactorAddress <<= 4;  // address is a left aligned 12-bit value
 
   uint8_t cmdReadRegister[] = { 0xFA, (uint8_t)(scaleFactorAddress >> 8), (uint8_t)(scaleFactorAddress & 0x00FF) };
@@ -92,4 +92,51 @@ float SensirionFlow::readSample()
   
   float measurementValue = ((data[0] << 8) + data[1]);
   return (measurementValue / mScaleFactor);
+}
+
+bool SensirionFlow::readRegister(register_id_t reg, register_value_t *buffer)
+{
+  const static uint8_t commands[] = { 0xE3, 0xE5, 0xE7, 0xE9 };
+  const uint8_t dataLength = 2;
+
+  if (reg >= 4)
+  {
+    Serial.print("Illegal register\n");
+    return false;
+  }
+
+  uint8_t data[dataLength];
+  
+  if (!I2CHelper::readFromI2C(mI2cAddress, &commands[reg], 1, data, dataLength))
+  {
+    Serial.print("Failed to read from I2C 5\n");
+    return false;
+  }
+  
+  *buffer = (data[0] << 8) | data[1];
+  return true;
+}
+
+bool SensirionFlow::writeRegister(register_id_t reg, register_value_t data)
+{
+  const static uint8_t commands[] = { 0xE2, 0xE4 };
+  const uint8_t commandLength = 3;
+
+  if (reg >= 2)
+  {
+    Serial.print("Illegal register\n");
+    return false;
+  }
+
+  uint8_t command[commandLength];
+  command[0] = commands[reg];
+  command[1] = data >> 8;
+  command[2] = data & 0x00FF;
+
+  if (!I2CHelper::readFromI2C(mI2cAddress, &command[0], commandLength, NULL, 0))
+  {
+    Serial.print("Failed to write to I2C\n");
+    return false;
+  }
+  return true;
 }

@@ -35,13 +35,26 @@ class SensirionFlow
 public:
   SensirionFlow(uint8_t i2cAddress);
   void init();
-  
+
   float readSample();
 
   uint8_t getDimension()          const { return mDimension;          };
   uint8_t getTimeBase()           const { return mTimeBase;           };
   uint8_t getVolumePressureUnit() const { return mVolumePressureUnit; };
-  
+
+  typedef enum
+  {
+	  user_reg = 0,
+	  adv_user_reg,
+	  readonly_1,
+	  readonly_2
+  } register_id_t;
+
+  typedef uint16_t register_value_t;
+
+  bool readRegister(register_id_t reg, register_value_t *buffer);
+  bool writeRegister(register_id_t reg, register_value_t data);
+
 private:
   uint8_t mI2cAddress;
   int16_t mScaleFactor;
