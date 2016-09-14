@@ -77,6 +77,13 @@ void SensirionFlow::init()
   mVolumePressureUnit = (measurementUnit >> 8) & 0x1F;
 }
 
+void SensirionFlow::reset()
+{
+  const uint8_t CMD_LENGTH = 1;
+  const uint8_t CMD_RESET[CMD_LENGTH] = { 0xFE };
+  I2CHelper::readFromI2C(mI2cAddress, CMD_RESET, CMD_LENGTH, NULL, 0);
+}
+
 float SensirionFlow::readSample()
 {
   const uint8_t cmdLength = 1;

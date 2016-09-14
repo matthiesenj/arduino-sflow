@@ -35,6 +35,7 @@ class SensirionFlow
 public:
   SensirionFlow(uint8_t i2cAddress);
   void init();
+  void reset();
 
   float readSample();
 
