@@ -44,17 +44,15 @@ SensirionFlow::SensirionFlow(uint8_t i2cAddress)
 
 bool SensirionFlow::init()
 {
-  const uint8_t CMD_LENGTH = 1;
-  const uint8_t CMD_READ_USER_REGISTER[CMD_LENGTH] = { 0xE3 };
   const uint8_t DATA_LENGTH = 6; // 2 data, 1 crc
   uint8_t data[DATA_LENGTH];
   
   // - read user register
-  if (!I2CHelper::readFromI2C(mI2cAddress, CMD_READ_USER_REGISTER, CMD_LENGTH, data, 3)) {
-    return false;
+  register_value_t baseAddress;
+  if (!readRegister(user_reg, &baseAddress)) {
+      return false;
   }
-  
-  uint16_t baseAddress = (data[0] << 8) + data[1];
+
   baseAddress &= 0x70; // EEPROM base address is bits <6..4>
   baseAddress >>= 4;
   baseAddress *= 0x300;
@@ -73,6 +71,7 @@ bool SensirionFlow::init()
   mDimension = measurementUnit & 0xF;
   mTimeBase = (measurementUnit >> 4) & 0xF;
   mVolumePressureUnit = (measurementUnit >> 8) & 0x1F;
+  return true;
 }
 
 void SensirionFlow::reset()
@@ -103,15 +102,13 @@ bool SensirionFlow::readRegister(register_id_t reg, register_value_t *buffer)
   const static uint8_t commands[] = { 0xE3, 0xE5, 0xE7, 0xE9 };
   const uint8_t dataLength = 2;
 
-  if (reg >= 4)
-  {
+  if (reg >= 4) {
     return false;
   }
 
   uint8_t data[dataLength];
   
-  if (!I2CHelper::readFromI2C(mI2cAddress, &commands[reg], 1, data, dataLength))
-  {
+  if (!I2CHelper::readFromI2C(mI2cAddress, &commands[reg], 1, data, dataLength)) {
     return false;
   }
   
@@ -124,8 +121,7 @@ bool SensirionFlow::writeRegister(register_id_t reg, register_value_t data)
   const static uint8_t commands[] = { 0xE2, 0xE4 };
   const uint8_t commandLength = 3;
 
-  if (reg >= 2)
-  {
+  if (reg >= 2){
     return false;
   }
 
@@ -140,8 +136,9 @@ bool SensirionFlow::writeRegister(register_id_t reg, register_value_t data)
 bool SensirionFlow::modifyRegister(register_id_t reg, register_value_t data, register_value_t mask)
 {
   register_value_t value;
-  if (!readRegister(reg, &value))
-    return false:
+  if (!readRegister(reg, &value)) {
+    return false;
+  }
 
   value &= ~mask; // zero out bits to modify
   value |= data & mask; // set 1-bits to modify
