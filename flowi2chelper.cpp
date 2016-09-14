@@ -39,18 +39,9 @@ bool I2CHelper::readFromI2C(uint8_t i2cAddress, const uint8_t* i2cCommand, uint8
   }
 
   if (dataLength != 0) {
-    Wire.requestFrom(i2cAddress, dataLength);
-
-    // there should be no reason for this to not be ready, since we're using clock stretching mode,
-    // but just in case we'll try a few times
-    uint8_t tries = 1;
-    while (Wire.available() < dataLength) {
-      delay(1);
-      if (tries++ >= MAX_READ_TRIES) {
+    if (dataLength > Wire.requestFrom(i2cAddress, dataLength))
         return false;
-      }
-    }
-  
+
     for (int i = 0; i < dataLength; ++i) {
       data[i] = Wire.read();
     }

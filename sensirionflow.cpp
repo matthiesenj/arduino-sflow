@@ -79,19 +79,30 @@ void SensirionFlow::init()
 
 float SensirionFlow::readSample()
 {
+  float measurement;
+  if (!readSample(&measurement))
+  {
+      measurement = 0;
+  }
+  return measurement;
+}
+
+bool SensirionFlow::readSample(float *measurement)
+{
   const uint8_t cmdLength = 1;
   const uint8_t dataLength = 2;
   uint8_t command[cmdLength];
   uint8_t data[dataLength];
   
   command[0] = 0xF1;
-  if (!I2CHelper::readFromI2C(mI2cAddress, command, cmdLength, data, dataLength)) {
-    Serial.print("Failed to read from I2C 4\n");
-    return 0;
+  if (!I2CHelper::readFromI2C(mI2cAddress, command, cmdLength, data, dataLength))
+  {
+    return false;
   }
   
   float measurementValue = ((data[0] << 8) + data[1]);
-  return (measurementValue / mScaleFactor);
+  *measurement = measurementValue / mScaleFactor;
+  return true;
 }
 
 bool SensirionFlow::readRegister(register_id_t reg, register_value_t *buffer)

@@ -37,6 +37,7 @@ public:
   void init();
 
   float readSample();
+  bool readSample(float *measurement);
 
   uint8_t getDimension()          const { return mDimension;          };
   uint8_t getTimeBase()           const { return mTimeBase;           };
