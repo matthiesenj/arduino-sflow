@@ -37,7 +37,21 @@ public:
   void init();
   void reset();
 
+  /**
+   * Original function kept for compatibility.
+   */
   float readSample();
+
+  /**
+   * Trigger measurement, return true if successful.
+   */
+  bool triggerMeasurement(bool masterHold = true);
+  /**
+   * Master hold: Trigger a measurement with triggerMeasurement, then use readMeasurement to read it (blocking).
+   * No master hold: Trigger a measurement with triggerMeasurement, then poll with readMeasurement until returning true.
+   * Please note that you may need to modify the relevant sensor register first to disable master hold.
+   */
+  bool readMeasurement(float *measurement);
 
   uint8_t getDimension()          const { return mDimension;          };
   uint8_t getTimeBase()           const { return mTimeBase;           };

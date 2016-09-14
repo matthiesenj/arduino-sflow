@@ -86,19 +86,48 @@ void SensirionFlow::reset()
 
 float SensirionFlow::readSample()
 {
+  float measurement;
+  if (!triggerMeasurement(true) || !readMeasurement(&measurement))
+  {
+      measurement = 0;
+  }
+  return measurement;
+}
+
+bool SensirionFlow::triggerMeasurement(bool masterHold)
+{
   const uint8_t cmdLength = 1;
+  static uint8_t command[cmdLength] = { 0xF1 };
+
+  // new
+  Wire.beginTransmission(mI2cAddress);
+  Wire.write(command, cmdLength);
+  if (Wire.endTransmission(false) != 0) {
+    return false;
+  }
+  // if not master hold, we need to perform a read to trigger the measurement
+  if (!masterHold) {
+    Wire.requestFrom(mI2cAddress, (uint8_t)0);
+  }
+
+  return true;
+}
+
+bool SensirionFlow::readMeasurement(float *measurement)
+{
   const uint8_t dataLength = 2;
-  uint8_t command[cmdLength];
   uint8_t data[dataLength];
-  
-  command[0] = 0xF1;
-  if (!I2CHelper::readFromI2C(mI2cAddress, command, cmdLength, data, dataLength)) {
-    Serial.print("Failed to read from I2C 4\n");
-    return 0;
+
+  if (dataLength > Wire.requestFrom(mI2cAddress, dataLength))
+    return false;
+
+  for (int i = 0; i < dataLength; ++i) {
+    data[i] = Wire.read();
   }
   
   float measurementValue = ((data[0] << 8) + data[1]);
-  return (measurementValue / mScaleFactor);
+  *measurement = measurementValue / mScaleFactor;
+  return true;
 }
 
 bool SensirionFlow::readRegister(register_id_t reg, register_value_t *buffer)
