@@ -42,7 +42,7 @@ SensirionFlow::SensirionFlow(uint8_t i2cAddress)
 {
 }
 
-void SensirionFlow::init()
+bool SensirionFlow::init()
 {
   const uint8_t CMD_LENGTH = 1;
   const uint8_t CMD_READ_USER_REGISTER[CMD_LENGTH] = { 0xE3 };
@@ -51,8 +51,7 @@ void SensirionFlow::init()
   
   // - read user register
   if (!I2CHelper::readFromI2C(mI2cAddress, CMD_READ_USER_REGISTER, CMD_LENGTH, data, 3)) {
-    Serial.print("Failed to read from I2C 1\n");
-    return;
+    return false;
   }
   
   uint16_t baseAddress = (data[0] << 8) + data[1];
@@ -66,8 +65,7 @@ void SensirionFlow::init()
 
   uint8_t cmdReadRegister[] = { 0xFA, (uint8_t)(scaleFactorAddress >> 8), (uint8_t)(scaleFactorAddress & 0x00FF) };
   if (!I2CHelper::readFromI2C(mI2cAddress, cmdReadRegister, 3, data, DATA_LENGTH)) {
-    Serial.print("Failed to read from I2C 2\n");
-    return;
+    return false;
   }
   mScaleFactor = (data[0] << 8) + data[1]; // data[2] = crc
 
@@ -93,7 +91,6 @@ float SensirionFlow::readSample()
   
   command[0] = 0xF1;
   if (!I2CHelper::readFromI2C(mI2cAddress, command, cmdLength, data, dataLength)) {
-    Serial.print("Failed to read from I2C 4\n");
     return 0;
   }
   
@@ -108,7 +105,6 @@ bool SensirionFlow::readRegister(register_id_t reg, register_value_t *buffer)
 
   if (reg >= 4)
   {
-    Serial.print("Illegal register\n");
     return false;
   }
 
@@ -116,7 +112,6 @@ bool SensirionFlow::readRegister(register_id_t reg, register_value_t *buffer)
   
   if (!I2CHelper::readFromI2C(mI2cAddress, &commands[reg], 1, data, dataLength))
   {
-    Serial.print("Failed to read from I2C 5\n");
     return false;
   }
   
@@ -131,7 +126,6 @@ bool SensirionFlow::writeRegister(register_id_t reg, register_value_t data)
 
   if (reg >= 2)
   {
-    Serial.print("Illegal register\n");
     return false;
   }
 
@@ -140,12 +134,7 @@ bool SensirionFlow::writeRegister(register_id_t reg, register_value_t data)
   command[1] = data >> 8;
   command[2] = data & 0x00FF;
 
-  if (!I2CHelper::readFromI2C(mI2cAddress, &command[0], commandLength, NULL, 0))
-  {
-    Serial.print("Failed to write to I2C\n");
-    return false;
-  }
-  return true;
+  return I2CHelper::readFromI2C(mI2cAddress, &command[0], commandLength, NULL, 0);
 }
 
 bool SensirionFlow::modifyRegister(register_id_t reg, register_value_t data, register_value_t mask)
