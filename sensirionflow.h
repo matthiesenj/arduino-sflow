@@ -34,7 +34,7 @@ class SensirionFlow
 {
 public:
   SensirionFlow(uint8_t i2cAddress);
-  void init();
+  bool init();
   void reset();
 
   /**
