@@ -79,30 +79,19 @@ void SensirionFlow::init()
 
 float SensirionFlow::readSample()
 {
-  float measurement;
-  if (!readSample(&measurement))
-  {
-      measurement = 0;
-  }
-  return measurement;
-}
-
-bool SensirionFlow::readSample(float *measurement)
-{
   const uint8_t cmdLength = 1;
   const uint8_t dataLength = 2;
   uint8_t command[cmdLength];
   uint8_t data[dataLength];
   
   command[0] = 0xF1;
-  if (!I2CHelper::readFromI2C(mI2cAddress, command, cmdLength, data, dataLength))
-  {
-    return false;
+  if (!I2CHelper::readFromI2C(mI2cAddress, command, cmdLength, data, dataLength)) {
+    Serial.print("Failed to read from I2C 4\n");
+    return 0;
   }
   
   float measurementValue = ((data[0] << 8) + data[1]);
-  *measurement = measurementValue / mScaleFactor;
-  return true;
+  return (measurementValue / mScaleFactor);
 }
 
 bool SensirionFlow::readRegister(register_id_t reg, register_value_t *buffer)
@@ -150,4 +139,15 @@ bool SensirionFlow::writeRegister(register_id_t reg, register_value_t data)
     return false;
   }
   return true;
+}
+
+bool SensirionFlow::modifyRegister(register_id_t reg, register_value_t data, register_value_t mask)
+{
+  register_value_t value;
+  if (!readRegister(reg, &value))
+    return false:
+
+  value &= ~mask; // zero out bits to modify
+  value |= data & mask; // set 1-bits to modify
+  return writeRegister(reg, value);
 }

@@ -37,7 +37,6 @@ public:
   void init();
 
   float readSample();
-  bool readSample(float *measurement);
 
   uint8_t getDimension()          const { return mDimension;          };
   uint8_t getTimeBase()           const { return mTimeBase;           };
@@ -55,6 +54,7 @@ public:
 
   bool readRegister(register_id_t reg, register_value_t *buffer);
   bool writeRegister(register_id_t reg, register_value_t data);
+  bool modifyRegister(register_id_t reg, register_value_t data, register_value_t mask);
 
 private:
   uint8_t mI2cAddress;
